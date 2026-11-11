@@ -11,14 +11,22 @@ test('validateConfig throws when cinema_id is empty', () => {
   assert.throws(() => validateConfig({ cinema_id: '' }), /Find my cinema/);
 });
 
-test('validateConfig throws when cinema_id is not a 5-character code', () => {
+test('validateConfig throws when cinema_id is not a letter followed by four alphanumerics', () => {
   assert.throws(() => validateConfig({ cinema_id: 'ABC' }), /must look like P0905/);
   assert.throws(() => validateConfig({ cinema_id: 'P905' }), /must look like P0905/);
   assert.throws(() => validateConfig({ cinema_id: 'P09055' }), /must look like P0905/);
   assert.throws(() => validateConfig({ cinema_id: 'P090!' }), /must look like P0905/);
 });
 
-test('validateConfig accepts any 5-character AlloCiné internalId', () => {
+test('validateConfig rejects a code that does not start with a letter', () => {
+  // AlloCiné theater ids always start with a letter; a digit-first code is one
+  // copied from the wrong place (e.g. an old "csalle" reference like 5914Z) and
+  // would 404 on every showtimes fetch, so it is caught at config time.
+  assert.throws(() => validateConfig({ cinema_id: '5914Z' }), /must look like P0905/);
+  assert.throws(() => validateConfig({ cinema_id: '02828' }), /must look like P0905/);
+});
+
+test('validateConfig accepts a well-formed AlloCiné internalId', () => {
   // Letter + four digits, the common shape.
   assert.doesNotThrow(() => validateConfig({ cinema_id: 'P0905' }));
   // Codes with letters in other positions are just as valid: Vichy is G028P,

@@ -96,6 +96,17 @@ export async function fetchNowPlaying(cinemaId, { now = new Date() } = {}) {
   const data = await allocinePost(`_/showtimes/theater-${cinemaId}/d-${dateKey}/`);
 
   if (data.error) {
+    // AlloCiné answers { error: true, message: "no.showtime.error" } when the
+    // cinema simply has no showtimes for the requested day (a closed day, or
+    // every session of the day already passed). That is an empty program, not
+    // a failure, so render the widget's calm empty state instead of surfacing
+    // an error.
+    if (data.message === 'no.showtime.error') {
+      logger.info(`AlloCiné cinema ${cinemaId}: no showtimes for ${dateKey}`);
+
+      return [];
+    }
+
     throw new Error(data.message || `allocine.fr returned an error for cinema ${cinemaId}`);
   }
 

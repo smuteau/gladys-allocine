@@ -73,6 +73,16 @@ test('returns an empty array when nothing plays today', async () => {
   assert.deepEqual(await fetchNowPlaying('P0052'), []);
 });
 
+test('treats no.showtime.error as an empty program, not an error', async () => {
+  // AlloCiné returns this when the cinema has no showtimes for the day.
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({ error: true, message: 'no.showtime.error', results: [] }),
+  });
+
+  assert.deepEqual(await fetchNowPlaying('P0052'), []);
+});
+
 test('throws when allocine.fr reports an error', async () => {
   globalThis.fetch = async () => ({
     ok: true,
